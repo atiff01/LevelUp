@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="ms" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEVEL UP YOUR 2027 | Gamified Habit Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Canvas Confetti for Level Up Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" defer></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        rpg: {
+                            dark: '#0B0F19',
+                            card: '#131A2B',
+                            border: '#1E293B',
+                            accent: '#10B981',
+                            indigo: '#6366F1'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.7); }
+        .exp-bar-glow { box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); }
+        .glass-panel { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-rpg-dark dark:text-slate-100 font-sans transition-colors duration-300 min-h-screen flex flex-col">
+
+    <!-- Non-blocking Fast Loading Overlay (Auto-dismissed <= 350ms) -->
+    <div id="loadingOverlay" class="fixed inset-0 z-50 bg-slate-950/95 flex flex-col items-center justify-center text-white transition-opacity duration-300">
+        <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <h2 class="font-display font-extrabold text-xl tracking-wider text-emerald-400">LEVEL UP 2027</h2>
+        <p class="text-xs text-slate-400 mt-1">Menyediakan dunia pengembaraan anda...</p>
+    </div>
+
+    <!-- Authentication Screen (Shown ONLY when user explicitly logs out) -->
+    <div id="authScreen" class="hidden min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-100 via-indigo-50/40 to-emerald-50/40 dark:from-rpg-dark dark:via-slate-900 dark:to-indigo-950/30">
+        <div class="w-full max-w-md bg-white dark:bg-rpg-card border border-slate-200 dark:border-rpg-border rounded-3xl shadow-2xl p-6 sm:p-8 relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Brand Logo -->
+            <div class="text-center mb-6 relative z-10">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-indigo-600 text-white text-2xl shadow-lg shadow-emerald-500/30 mb-3 animate-float">
+                    <i class="fa-solid fa-angles-up"></i>
+                </div>
+                <h1 class="font-display font-extrabold text-2xl sm:text-3xl tracking-tight bg-gradient-to-r from-emerald-500 to-indigo-500 bg-clip-text text-transparent">
+                    LEVEL UP
+                </h1>
+                <p class="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-1">
+                    LEVEL UP YOUR 2027 JOURNEY
+                </p>
+            </div>
+
+            <!-- Auth Tabs -->
+            <div class="grid grid-cols-2 gap-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl mb-6">
+                <button type="button" id="tabLogin" onclick="switchAuthTab('login')" class="py-2 text-sm font-semibold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all">
+                    Log Masuk
+                </button>
+                <button type="button" id="tabRegister" onclick="switchAuthTab('register')" class="py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                    Daftar Akaun
+                </button>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="authErrorBox" class="hidden mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-medium flex items-start gap-2">
+                <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                <span id="authErrorText">Ralat berlaku.</span>
+            </div>
+
+            <!-- Auth Form -->
+            <form id="authForm" onsubmit="handleEmailAuth(event)" class="space-y-4">
+                <div id="nameFieldContainer" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Nama Karakter / Pengembara</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </span>
+                        <input type="text" id="authName" placeholder="Contoh: Amirul Hero 2027" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Alamat Emel</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <input type="email" id="authEmail" required placeholder="nama@emel.com" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Kata Laluan</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" id="authPassword" required minlength="6" placeholder="Minimum 6 aksara" class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <button type="submit" id="authSubmitBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition-all">
+                    Mulakan Pengembaraan
+                </button>
+            </form>
+
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-slate-200 dark:border-slate-700/80"></div>
+                </div>
+                <div class="relative flex justify-center text-xs">
+                    <span class="px-3 bg-white dark:bg-rpg-card text-slate-400">atau akses pantas</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="handleGuestLogin()" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200 font-semibold text-sm flex items-center justify-center gap-2 transition-all">
+                <i class="fa-solid fa-gamepad text-emerald-500"></i>
+                <span>Masuk Segera (Mod Tetamu / Demo)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard App (Visible immediately on boot) -->
+    <div id="mainApp" class="flex-1 flex flex-col lg:flex-row min-h-screen">
+        
+        <!-- Desktop Sidebar Navigation -->
+        <aside class="hidden lg:flex lg:flex-col lg:w-72 bg-white dark:bg-rpg-card border-r border-slate-200 dark:border-rpg-border p-5 sticky top-0 h-screen overflow-y-auto">
+            <!-- Brand Header -->
+            <div class="flex items-center gap-3 px-2 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 flex items-center justify-center text-white text-lg shadow-md shadow-emerald-500/20">
+                    <i class="fa-solid fa-angles-up"></i>
+                </div>
+                <div>
+                    <h1 class="font-display font-extrabold text-xl tracking-tight bg-gradient-to-r from-emerald-500 to-indigo-500 bg-clip-text text-transparent">LEVEL UP</h1>
+                    <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">YOUR 2027 JOURNEY</p>
+                </div>
+            </div>
+
+            <!-- Quick Action Button -->
+            <button onclick="openQuestModal()" class="w-full py-3 px-4 mb-6 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-plus"></i>
+                <span data-i18n="addQuestBtn">Tambah Quest Baharu</span>
+            </button>
+
+            <!-- Categories Navigation -->
+            <div class="flex-1 space-y-1">
+                <div class="flex items-center justify-between px-2 mb-2">
+                    <span data-i18n="focusCategoriesLabel" class="text-xs font-bold uppercase tracking-wider text-slate-400">Kategori Fokus</span>
+                    <button onclick="openCategoryModal()" class="text-xs font-semibold text-emerald-500 hover:text-emerald-400 flex items-center gap-1" title="Tambah Kategori Baharu">
+                        <i class="fa-solid fa-folder-plus"></i> <span data-i18n="newShortBtn">+ Baru</span>
+                    </button>
+                </div>
+                <div id="desktopCategoryList" class="space-y-1"></div>
+            </div>
+
+            <!-- Unified Settings Shortcut in Sidebar Footer -->
+            <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
+                <button onclick="openSettingsModal()" class="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center justify-center gap-2 transition-colors">
+                    <i class="fa-solid fa-gear text-indigo-500"></i>
+                    <span data-i18n="settingsBtn">Tetapan & Akaun</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col min-w-0 pb-24 lg:pb-8">
+            
+            <!-- Top Header Bar -->
+            <header class="sticky top-0 z-30 bg-white/85 dark:bg-rpg-card/85 glass-panel border-b border-slate-200 dark:border-rpg-border px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+                <!-- Mobile Brand -->
+                <div class="flex items-center gap-2.5 lg:hidden">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 flex items-center justify-center text-white text-base shadow-md">
+                        <i class="fa-solid fa-angles-up"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-display font-extrabold text-lg leading-none bg-gradient-to-r from-emerald-500 to-indigo-500 bg-clip-text text-transparent">LEVEL UP</h1>
+                        <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">2027 JOURNEY</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Greeting / Page Title -->
+                <div class="hidden lg:block">
+                    <h2 data-i18n="headerTitle" class="font-display font-bold text-lg text-slate-800 dark:text-white">Papan Misi & Pembangunan Diri 2027</h2>
+                    <p data-i18n="headerSubtitle" class="text-xs text-slate-500 dark:text-slate-400">Selesaikan quest setiap hari untuk tingkatkan Level karakter anda!</p>
+                </div>
+
+                <!-- Right Header Actions -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <!-- Cloud / Local Sync Status Pill -->
+                    <div id="syncStatusPill" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="syncStatusText">Sedia</span>
+                    </div>
+
+                    <!-- Streak Badge -->
+                    <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-bold" title="Streak Harian">
+                        <i class="fa-solid fa-fire"></i>
+                        <span id="headerStreakCount">1</span>
+                        <span data-i18n="dayUnit" class="hidden sm:inline">Hari</span>
+                    </div>
+
+                    <!-- Dark/Light Mode Toggle -->
+                    <button onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors" title="Tukar Tema Gelap / Cerah">
+                        <i id="themeIcon" class="fa-solid fa-sun"></i>
+                    </button>
+
+                    <!-- Unified Settings Button -->
+                    <button onclick="openSettingsModal()" class="px-3 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-2 text-xs font-bold transition-colors border border-slate-200/80 dark:border-slate-700/80">
+                        <i class="fa-solid fa-gear text-indigo-500"></i>
+                        <span data-i18n="settingsShortBtn">Tetapan</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Body Container -->
+            <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-5 space-y-6">
+
+                <!-- Daily Hikmah / Motivational Banner -->
+                <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500/10 via-indigo-500/10 to-purple-500/10 border border-emerald-500/20 px-4 py-3 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0 text-sm">
+                            <i class="fa-solid fa-quote-left"></i>
+                        </span>
+                        <p id="dailyQuoteText" class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 truncate">
+                            "Amalan yang paling dicintai oleh Allah adalah amalan yang berterusan walaupun sedikit."
+                        </p>
+                    </div>
+                    <button onclick="nextQuote()" class="text-xs text-slate-400 hover:text-emerald-500 shrink-0 p-1.5 rounded-lg transition-colors" title="Tukar Kata Hikmah">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
+                </div>
+
+                <!-- Character Profile RPG Card -->
+                <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 dark:from-rpg-card dark:via-indigo-950/60 dark:to-rpg-card border border-slate-800 dark:border-indigo-500/20 p-5 sm:p-7 text-white shadow-xl">
+                    <div class="absolute -right-12 -top-12 w-56 h-56 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute left-1/3 -bottom-16 w-56 h-56 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <!-- Avatar & Character Info -->
+                        <div class="flex items-center gap-4 sm:gap-5">
+                            <div class="relative shrink-0">
+                                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-emerald-400 to-indigo-500 p-0.5 shadow-lg shadow-emerald-500/30">
+                                    <div class="w-full h-full rounded-[14px] bg-slate-900 flex items-center justify-center text-3xl sm:text-4xl">
+                                        <span id="characterAvatarEmoji">🧙‍♂️</span>
+                                    </div>
+                                </div>
+                                <div class="absolute -bottom-2 -right-2 px-2.5 py-0.5 rounded-lg bg-emerald-500 text-slate-950 font-display font-extrabold text-xs shadow-md">
+                                    LV.<span id="profileLevelBadge">1</span>
+                                </div>
+                            </div>
+
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 id="profileUserName" class="font-display font-extrabold text-xl sm:text-2xl tracking-tight truncate">Pengembara 2027</h3>
+                                    <span id="profileTitleBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/30 border border-indigo-400/30 text-indigo-200">
+                                        Novice Adventurer
+                                    </span>
+                                </div>
+                                <p id="profileUserEmail" class="text-xs text-slate-400 mt-0.5 truncate">pengembara@levelup2027.my</p>
+
+                                <!-- EXP Progress Bar -->
+                                <div class="mt-3 max-w-md">
+                                    <div class="flex justify-between text-xs font-semibold mb-1.5">
+                                        <span data-i18n="expProgressLabel" class="text-emerald-400">EXP Kemajuan</span>
+                                        <span class="text-slate-300"><span id="currentLevelExp">0</span> / <span id="nextLevelExp">100</span> EXP</span>
+                                    </div>
+                                    <div class="w-full h-3 bg-slate-800/90 rounded-full overflow-hidden p-0.5 border border-slate-700/80">
+                                        <div id="expProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-500 exp-bar-glow transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RPG Stats Summary Boxes -->
+                        <div class="grid grid-cols-3 gap-2.5 sm:gap-3 shrink-0">
+                            <div class="bg-white/5 border border-white/10 rounded-2xl p-3 text-center">
+                                <div class="text-emerald-400 text-base sm:text-lg mb-0.5"><i class="fa-solid fa-bolt"></i></div>
+                                <div id="statTotalExp" class="font-display font-extrabold text-lg sm:text-xl">0</div>
+                                <div data-i18n="totalExpLabel" class="text-[10px] uppercase tracking-wider text-slate-400">Jumlah EXP</div>
+                            </div>
+                            <div class="bg-white/5 border border-white/10 rounded-2xl p-3 text-center">
+                                <div class="text-indigo-400 text-base sm:text-lg mb-0.5"><i class="fa-solid fa-trophy"></i></div>
+                                <div id="statQuestsDone" class="font-display font-extrabold text-lg sm:text-xl">0</div>
+                                <div data-i18n="questsDoneLabel" class="text-[10px] uppercase tracking-wider text-slate-400">Quest Selesai</div>
+                            </div>
+                            <div class="bg-white/5 border border-white/10 rounded-2xl p-3 text-center">
+                                <div class="text-orange-400 text-base sm:text-lg mb-0.5"><i class="fa-solid fa-fire"></i></div>
+                                <div id="statStreakDays" class="font-display font-extrabold text-lg sm:text-xl">1</div>
+                                <div data-i18n="streakDaysLabel" class="text-[10px] uppercase tracking-wider text-slate-400">Streak Hari</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- RPG Hexagon Radar & Badges Showcase -->
+                <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <!-- Character Pentagon Stat Radar -->
+                    <div class="lg:col-span-5 bg-white dark:bg-rpg-card border border-slate-200 dark:border-rpg-border rounded-3xl p-5 flex flex-col items-center justify-between shadow-sm">
+                        <div class="w-full flex items-center justify-between mb-2">
+                            <h4 class="font-display font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-emerald-500"></i>
+                                <span data-i18n="radarTitle">Statistik Atribut Karakter</span>
+                            </h4>
+                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500">RPG Build</span>
+                        </div>
+                        <div class="relative w-full max-w-[230px] aspect-square flex items-center justify-center my-1">
+                            <svg id="rpgRadarSvg" viewBox="0 0 240 240" class="w-full h-full overflow-visible"></svg>
+                        </div>
+                        <p data-i18n="radarHint" class="text-[11px] text-center text-slate-400">
+                            Selesaikan quest dalam setiap kategori untuk seimbangkan kuasa karakter anda!
+                        </p>
+                    </div>
+
+                    <!-- Achievements / Badges Showcase -->
+                    <div class="lg:col-span-7 bg-white dark:bg-rpg-card border border-slate-200 dark:border-rpg-border rounded-3xl p-5 flex flex-col justify-between shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-display font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-medal text-amber-500"></i>
+                                <span data-i18n="badgesTitle">Pencapaian & Lencana (Badges)</span>
+                            </h4>
+                            <span id="badgeProgressCounter" class="text-xs font-bold text-indigo-500">0 / 6 Dibuka</span>
+                        </div>
+                        <div id="badgesGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+                    </div>
+                </section>
+
+                <!-- Mobile Horizontal Category Filter Pills -->
+                <section class="lg:hidden space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span data-i18n="focusCategoriesLabel" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Kategori</span>
+                        <button onclick="openCategoryModal()" class="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                            <i class="fa-solid fa-plus-circle"></i> <span data-i18n="addCategoryShort">Tambah Kategori</span>
+                        </button>
+                    </div>
+                    <div id="mobileCategoryList" class="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
+                </section>
+
+                <!-- Quest Board Controls & Filters -->
+                <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h3 id="activeCategoryTitle" class="font-display font-bold text-lg sm:text-xl flex items-center gap-2">
+                            <span>Semua Quest</span>
+                        </h3>
+                        <p id="activeCategorySubtitle" class="text-xs text-slate-500 dark:text-slate-400">
+                            Paparan semua tugasan merentas semua kategori pembangunan 2027.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Status Filter -->
+                        <div class="inline-flex p-1 rounded-xl bg-slate-200/70 dark:bg-slate-800/90">
+                            <button onclick="setStatusFilter('active')" id="filterActiveBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all">
+                                <span data-i18n="filterActive">Aktif</span> (<span id="countActive">0</span>)
+                            </button>
+                            <button onclick="setStatusFilter('completed')" id="filterCompletedBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                                <span data-i18n="filterCompleted">Selesai</span> (<span id="countCompleted">0</span>)
+                            </button>
+                            <button onclick="setStatusFilter('all')" id="filterAllBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                                <span data-i18n="filterAll">Semua</span>
+                            </button>
+                        </div>
+
+                        <!-- Desktop Add Quest Button -->
+                        <button onclick="openQuestModal()" class="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition-all">
+                            <i class="fa-solid fa-plus"></i>
+                            <span data-i18n="addQuestShort">Tambah Quest</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Quests Grid -->
+                <section id="questsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></section>
+
+                <!-- Empty State -->
+                <div id="emptyQuestsState" class="hidden text-center py-12 px-4 rounded-3xl bg-white dark:bg-rpg-card border border-dashed border-slate-300 dark:border-slate-700">
+                    <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xl text-slate-400 mb-3">
+                        <i class="fa-solid fa-scroll"></i>
+                    </div>
+                    <h4 data-i18n="emptyQuestTitle" class="font-display font-bold text-base text-slate-800 dark:text-white">Tiada Quest Ditemui</h4>
+                    <p data-i18n="emptyQuestDesc" class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 mb-4">
+                        Tiada tugasan dalam paparan ini. Tambah quest baharu untuk mula mengumpul EXP dan naikkan Level anda!
+                    </p>
+                    <button onclick="openQuestModal()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs transition-all">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="createFirstQuestBtn">Cipta Quest Baharu</span>
+                    </button>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-rpg-card/95 glass-panel border-t border-slate-200 dark:border-rpg-border px-4 py-2 flex items-center justify-around">
+            <button onclick="selectCategory('all')" class="flex flex-col items-center gap-1 text-emerald-500 text-xs font-semibold">
+                <i class="fa-solid fa-compass text-base"></i>
+                <span data-i18n="filterAll">Semua</span>
+            </button>
+            <button onclick="openCategoryModal()" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                <i class="fa-solid fa-folder-plus text-base"></i>
+                <span data-i18n="categoryNav">Kategori</span>
+            </button>
+            <button onclick="openQuestModal()" class="-mt-6 w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-indigo-600 text-white shadow-lg shadow-emerald-500/30 flex items-center justify-center text-lg">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+            <button onclick="openSettingsModal()" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                <i class="fa-solid fa-gear text-base"></i>
+                <span data-i18n="settingsShortBtn">Tetapan</span>
+            </button>
+            <button onclick="toggleTheme()" class="flex flex-col items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                <i class="fa-solid fa-circle-half-stroke text-base"></i>
+                <span data-i18n="themeNav">Tema</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- MODAL 1: Add / Edit Quest Modal -->
+    <div id="questModal" class="hidden fixed inset-0 z-50 bg-slate-950/75 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-rpg-card border border-slate-200 dark:border-rpg-border rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-5">
+                <h3 id="questModalTitle" class="font-display font-bold text-lg flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-500 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-scroll"></i>
+                    </span>
+                    <span data-i18n="addQuestBtn">Tambah Quest Baharu</span>
+                </h3>
+                <button onclick="closeQuestModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="questForm" onsubmit="handleSaveQuest(event)" class="space-y-4">
+                <input type="hidden" id="editQuestId">
+
+                <div>
+                    <label data-i18n="questNameLabel" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Nama Quest / Tugasan</label>
+                    <input type="text" id="questTitleInput" required placeholder="Contoh: Tadabbur Al-Quran 1 muka surat" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div>
+                    <label data-i18n="categoryNav" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Kategori</label>
+                    <select id="questCategorySelect" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label data-i18n="difficultyLabel" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Tahap Kesukaran (EXP)</label>
+                        <select id="questDifficultySelect" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="15">Mudah (+15 EXP)</option>
+                            <option value="30" selected>Sederhana (+30 EXP)</option>
+                            <option value="60">Mencabar / Boss (+60 EXP)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label data-i18n="frequencyLabel" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Kekerapan</label>
+                        <select id="questFrequencySelect" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="daily">Harian (Daily)</option>
+                            <option value="once">Sekali Sahaja (One-Time)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeQuestModal()" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-emerald-500/20">
+                        Simpan Quest
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Add Custom Category Modal -->
+    <div id="categoryModal" class="hidden fixed inset-0 z-50 bg-slate-950/75 glass-panel flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-rpg-card border border-slate-200 dark:border-rpg-border rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-500 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-folder-plus"></i>
+                    </span>
+                    <span data-i18n="addCategoryShort">Tambah Kategori Baharu</span>
+                </h3>
+                <button onclick="closeCategoryModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleSaveCategory(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Nama Kategori</label>
+                    <input type="text" id="categoryNameInput" required placeholder="Contoh: Kewangan & Pelaburan 2027" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Pilih Ikon Emoji</label>
+                    <input type="hidden" id="selectedCategoryEmoji" value="🚀">
+                    <div id="emojiPickerGrid" class="grid grid-cols-6 gap-2"></div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Pilih Tema Warna</label>
+                    <input type="hidden" id="selectedCategoryColor" value="emerald">
+                    <div id="colorPickerGrid" class="flex items-center gap-3"></div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeCategoryModal()" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-xs shadow-lg shadow-indigo-500/20">
+                        Cipta Kategori
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Level Up Celebration Modal -->
+    <div id="levelUpModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 glass-panel flex items-center justify-center p-4">
+        <div class="bg-gradient-to-b from-slate-900 to-indigo-950 border border-emerald-500/40 rounded-3xl max-w-sm w-full p-7 text-center text-white shadow-2xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-emerald-500/10 blur-2xl pointer-events-none"></div>
+            <div class="relative z-10">
+                <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-emerald-400 to-indigo-500 flex items-center justify-center text-4xl shadow-xl shadow-emerald-500/30 mb-4 animate-bounce">
+                    🏆
+                </div>
+                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold uppercase tracking-widest">
+                    TAHNIAH! LEVEL UP!
+                </span>
+                <h3 class="font-display font-extrabold text-3xl mt-3">
+                    LEVEL <span id="modalNewLevel" class="text-emerald-400">2</span>
+                </h3>
+                <p class="text-xs text-slate-300 mt-1">Pangkat Karakter Baharu Anda:</p>
+                <div id="modalNewTitle" class="mt-2 inline-block px-4 py-1.5 rounded-xl bg-white/10 border border-white/15 font-display font-bold text-sm text-indigo-300">
+                    Focused Seeker
+                </div>
+                <p class="text-xs text-slate-400 mt-4 leading-relaxed">
+                    Teruskan momentum 2027 anda! Setiap langkah kecil membawa perubahan besar.
+                </p>
+                <button onclick="closeLevelUpModal()" class="mt-6 w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition-all">
+                    Teruskan Pengembaraan!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Unified Settings Modal (Language, Sound, Account Login/Logout, Reset) -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-slate-950/75 glass-panel flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-rpg-card border border-slate-200 dark:border-rpg-border rounded-3xl max-w-md w-full p-6 shadow-2xl my-auto">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-500 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-gear"></i>
+                    </span>
+                    <span data-i18n="settingsModalTitle">Tetapan & Akaun</span>
+                </h3>
+                <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-5">
+                <!-- 1. Multi-Language Selector -->
+                <div>
+                    <label data-i18n="languageLabel" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                        🌐 Bahasa / Language
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="changeLanguage('ms')" id="langBtn_ms" class="lang-btn py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                            <span>🇲🇾</span> <span>Bahasa Melayu</span>
+                        </button>
+                        <button type="button" onclick="changeLanguage('en')" id="langBtn_en" class="lang-btn py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                            <span>🇬🇧</span> <span>English</span>
+                        </button>
+                        <button type="button" onclick="changeLanguage('ar')" id="langBtn_ar" class="lang-btn py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                            <span>🇸🇦</span> <span>العربية</span>
+                        </button>
+                        <button type="button" onclick="changeLanguage('ja')" id="langBtn_ja" class="lang-btn py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                            <span>🇯🇵</span> <span>日本語 (RPG)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. Sound Effects Toggle -->
+                <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </div>
+                        <div>
+                            <p data-i18n="soundTitle" class="text-xs font-bold text-slate-800 dark:text-white">Kesan Bunyi RPG</p>
+                            <p data-i18n="soundDesc" class="text-[11px] text-slate-400">Bunyi EXP & naik Level</p>
+                        </div>
+                    </div>
+                    <button type="button" id="soundToggleBtn" onclick="toggleSoundEffects()" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs transition-all">
+                        ON
+                    </button>
+                </div>
+
+                <!-- 3. Account Status / Login / Logout Section -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span data-i18n="accountSectionTitle" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status Akaun</span>
+                        <span id="settingsAccountBadge" class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-500">Mod Tetamu</span>
+                    </div>
+                    <p id="settingsAccountEmail" class="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">pengembara@levelup2027.my</p>
+
+                    <form id="settingsQuickLoginForm" onsubmit="handleSettingsLogin(event)" class="space-y-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
+                        <p data-i18n="linkAccountHint" class="text-[11px] text-slate-400">Log masuk atau daftar emel untuk simpan data merentas peranti:</p>
+                        <input type="email" id="settingsEmailInput" required placeholder="Emel / Email" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="password" id="settingsPassInput" required minlength="6" placeholder="Kata Laluan (min 6 aksara)" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="submit" onclick="window.settingsAuthAction='login'" class="py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all">
+                                <i class="fa-solid fa-right-to-bracket mr-1"></i> <span data-i18n="loginBtn">Log Masuk</span>
+                            </button>
+                            <button type="submit" onclick="window.settingsAuthAction='register'" class="py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all">
+                                <i class="fa-solid fa-user-plus mr-1"></i> <span data-i18n="registerBtn">Daftar</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <button type="button" onclick="handleLogoutFromSettings()" class="w-full py-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span data-i18n="logoutBtn">Log Keluar Akaun</span>
+                    </button>
+                </div>
+
+                <!-- 4. Reset Controls -->
+                <div class="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                    <span data-i18n="resetZoneTitle" class="block text-xs font-bold uppercase tracking-wider text-rose-500">Zon Tetapan Semula (Reset)</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="resetDailyQuests(); closeSettingsModal();" class="py-2.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span data-i18n="resetDailyBtn">Reset Harian</span>
+                        </button>
+                        <button type="button" onclick="confirmFullReset()" id="fullResetBtn" class="py-2.5 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span data-i18n="resetAllBtn">Reset Semua</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-50 transform translate-y-24 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-slate-900 dark:bg-slate-800 border border-emerald-500/40 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3">
+            <div id="toastIcon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
+                <i class="fa-solid fa-sparkles"></i>
+            </div>
+            <div>
+                <p id="toastTitle" class="font-bold text-xs text-emerald-400">+30 EXP Diperoleh!</p>
+                <p id="toastMessage" class="text-xs text-slate-300">Quest berjaya diselesaikan.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Script (Instant Boot + Firestore Cloud Sync + Local Fallback) -->
+    <script type="module">
+        // ==========================================
+        // 1. DEFAULT DATA & CONSTANTS (ALWAYS AVAILABLE)
+        // ==========================================
+        const DEFAULT_CATEGORIES = [
+            { id: 'cat_chardev', name: 'Character Development', emoji: '🧠', color: 'indigo', isDefault: true },
+            { id: 'cat_softskill', name: 'Soft Skill', emoji: '🗣️', color: 'amber', isDefault: true },
+            { id: 'cat_spiritual', name: 'Spiritual (Islam & Al-Quran)', emoji: '🕌', color: 'emerald', isDefault: true },
+            { id: 'cat_physical', name: 'Physical Activity & Sport', emoji: '🏃‍♂️', color: 'rose', isDefault: true },
+            { id: 'cat_knowledge', name: 'Ilmu & Kerjaya 2027', emoji: '💻', color: 'cyan', isDefault: true }
+        ];
+
+        const DEFAULT_QUESTS = [
+            { id: 'q_default_1', title: 'Membaca & Tadabbur Al-Quran (1 Muka Surat)', categoryId: 'cat_spiritual', exp: 30, frequency: 'daily', completed: false, createdAt: Date.now() },
+            { id: 'q_default_2', title: 'Solat Subuh & Dhuha Tepat Pada Waktunya', categoryId: 'cat_spiritual', exp: 30, frequency: 'daily', completed: false, createdAt: Date.now() - 1000 },
+            { id: 'q_default_3', title: 'Senaman Kardio / Larian 20 Minit', categoryId: 'cat_physical', exp: 30, frequency: 'daily', completed: false, createdAt: Date.now() - 2000 },
+            { id: 'q_default_4', title: 'Latihan Komunikasi & Pengucapan Awam 15 Minit', categoryId: 'cat_softskill', exp: 15, frequency: 'daily', completed: false, createdAt: Date.now() - 3000 },
+            { id: 'q_default_5', title: 'Refleksi Jurnal Diri & Kawalan Emosi Harian', categoryId: 'cat_chardev', exp: 15, frequency: 'daily', completed: false, createdAt: Date.now() - 4000 },
+            { id: 'q_default_6', title: 'Belajar Kemahiran Digital / Coding 45 Minit', categoryId: 'cat_knowledge', exp: 60, frequency: 'daily', completed: false, createdAt: Date.now() - 5000 }
+        ];
+
+        const EMOJI_CHOICES = ['🚀', '📚', '💰', '🎯', '🎨', '🧘‍♂️', '⚡', '🌱', '🏆', '💡', '🔥', '🛡️'];
+        const COLOR_CHOICES = [
+            { name: 'emerald', bg: 'bg-emerald-500', badge: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' },
+            { name: 'indigo', bg: 'bg-indigo-500', badge: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' },
+            { name: 'amber', bg: 'bg-amber-500', badge: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' },
+            { name: 'rose', bg: 'bg-rose-500', badge: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30' },
+            { name: 'cyan', bg: 'bg-cyan-500', badge: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/30' },
+            { name: 'purple', bg: 'bg-purple-500', badge: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30' }
+        ];
+
+        // ==========================================
+        // 2. STATE INITIALIZATION (INSTANT LOCAL CACHE)
+        // ==========================================
+        const STORAGE_KEY = 'levelup_2027_state_v1';
+        let userProfile = {
+            name: 'Pengembara 2027',
+            email: 'Mod Pantas (Sedia Digunakan)',
+            exp: 0,
+            level: 1,
+            streak: 1,
+            questsCompleted: 0
+        };
+        let categories = [...DEFAULT_CATEGORIES];
+        let quests = [...DEFAULT_QUESTS];
+        let currentUser = null;
+        let authMode = 'login';
+        let selectedCategory = 'all';
+        let statusFilter = 'active';
+        let currentLang = 'ms';
+        let soundEnabled = true;
+        let quoteIndex = 0;
+        let resetConfirmArmed = false;
+        let db = null;
+        let auth = null;
+        let firestoreModules = null;
+        let unsubCategories = null;
+        let unsubQuests = null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'level-up-2027-app';
+        window.settingsAuthAction = 'login';
+
+        // Load saved local cache immediately so UI renders in 0ms
+        function loadLocalCache() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed.userProfile) userProfile = { ...userProfile, ...parsed.userProfile };
+                    if (Array.isArray(parsed.categories) && parsed.categories.length > 0) categories = parsed.categories;
+                    if (Array.isArray(parsed.quests)) quests = parsed.quests;
+                    if (parsed.currentLang) currentLang = parsed.currentLang;
+                    if (typeof parsed.soundEnabled === 'boolean') soundEnabled = parsed.soundEnabled;
+                }
+            } catch (e) {
+                console.warn('Local cache read skipped:', e);
+            }
+        }
+
+        function saveLocalCache() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    userProfile,
+                    categories,
+                    quests,
+                    currentLang,
+                    soundEnabled
+                }));
+            } catch (e) {
+                console.warn('Local cache write skipped:', e);
+            }
+        }
+
+        // Dismiss loading overlay safely and unconditionally
+        function dismissLoadingScreen() {
+            const loader = document.getElementById('loadingOverlay');
+            if (loader && !loader.classList.contains('hidden')) {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                }, 220);
+            }
+        }
+
+        // ==========================================
+        // 3. MULTI-LANGUAGE DICTIONARY (MS, EN, AR, JA)
+        // ==========================================
+        const I18N = {
+            ms: {
+                settingsBtn: "Tetapan & Akaun",
+                settingsShortBtn: "Tetapan",
+                settingsModalTitle: "Tetapan & Akaun",
+                languageLabel: "🌐 Bahasa / Language",
+                soundTitle: "Kesan Bunyi RPG",
+                soundDesc: "Bunyi EXP & naik Level",
+                accountSectionTitle: "Status Akaun",
+                linkAccountHint: "Log masuk atau daftar emel untuk simpan data merentas peranti:",
+                loginBtn: "Log Masuk",
+                registerBtn: "Daftar",
+                logoutBtn: "Log Keluar Akaun",
+                resetZoneTitle: "Zon Tetapan Semula (Reset)",
+                resetDailyBtn: "Reset Harian",
+                resetAllBtn: "Reset Semua",
+                totalExpLabel: "Jumlah EXP",
+                questsDoneLabel: "Quest Selesai",
+                streakDaysLabel: "Streak Hari",
+                expProgressLabel: "EXP Kemajuan",
+                radarTitle: "Statistik Atribut Karakter",
+                radarHint: "Selesaikan quest dalam setiap kategori untuk seimbangkan kuasa karakter anda!",
+                badgesTitle: "Pencapaian & Lencana (Badges)",
+                difficultyLabel: "Tahap Kesukaran (EXP)",
+                frequencyLabel: "Kekerapan",
+                allCatName: "Semua Kategori",
+                completeBtn: "Selesaikan Quest",
+                undoBtn: "Batal Selesai",
+                addQuestBtn: "Tambah Quest Baharu",
+                addQuestShort: "Tambah Quest",
+                addCategoryShort: "Tambah Kategori",
+                focusCategoriesLabel: "Kategori Fokus",
+                newShortBtn: "+ Baru",
+                headerTitle: "Papan Misi & Pembangunan Diri 2027",
+                headerSubtitle: "Selesaikan quest setiap hari untuk tingkatkan Level karakter anda!",
+                dayUnit: "Hari",
+                filterActive: "Aktif",
+                filterCompleted: "Selesai",
+                filterAll: "Semua",
+                emptyQuestTitle: "Tiada Quest Ditemui",
+                emptyQuestDesc: "Tiada tugasan dalam paparan ini. Tambah quest baharu untuk mula mengumpul EXP dan naikkan Level anda!",
+                createFirstQuestBtn: "Cipta Quest Baharu",
+                categoryNav: "Kategori",
+                themeNav: "Tema",
+                questNameLabel: "Nama Quest / Tugasan",
+                quotes: [
+                    "\"Amalan yang paling dicintai oleh Allah adalah amalan yang berterusan walaupun sedikit.\"",
+                    "\"1% lebih baik setiap hari membawa kepada perubahan 37x ganda dalam setahun!\"",
+                    "\"Disiplin adalah jambatan antara matlamat 2027 dan pencapaian sebenar.\"",
+                    "\"Setiap quest kecil yang anda selesaikan hari ini membentuk versi terbaik diri anda.\""
+                ]
+            },
+            en: {
+                settingsBtn: "Settings & Account",
+                settingsShortBtn: "Settings",
+                settingsModalTitle: "Settings & Account",
+                languageLabel: "🌐 Language / Bahasa",
+                soundTitle: "RPG Sound Effects",
+                soundDesc: "EXP gain & Level Up chimes",
+                accountSectionTitle: "Account Status",
+                linkAccountHint: "Login or register with email to sync progress across devices:",
+                loginBtn: "Login",
+                registerBtn: "Register",
+                logoutBtn: "Log Out",
+                resetZoneTitle: "Reset Zone",
+                resetDailyBtn: "Reset Daily",
+                resetAllBtn: "Reset All Data",
+                totalExpLabel: "Total EXP",
+                questsDoneLabel: "Quests Done",
+                streakDaysLabel: "Day Streak",
+                expProgressLabel: "EXP Progress",
+                radarTitle: "Character Attribute Radar",
+                radarHint: "Complete quests across categories to balance your character's RPG build!",
+                badgesTitle: "Achievements & Badges",
+                difficultyLabel: "Difficulty Tier (EXP)",
+                frequencyLabel: "Frequency",
+                allCatName: "All Categories",
+                completeBtn: "Complete Quest",
+                undoBtn: "Undo",
+                addQuestBtn: "Add New Quest",
+                addQuestShort: "Add Quest",
+                addCategoryShort: "Add Category",
+                focusCategoriesLabel: "Focus Categories",
+                newShortBtn: "+ New",
+                headerTitle: "2027 Self-Mastery & Quest Board",
+                headerSubtitle: "Complete daily quests to level up your character!",
+                dayUnit: "Days",
+                filterActive: "Active",
+                filterCompleted: "Completed",
+                filterAll: "All",
+                emptyQuestTitle: "No Quests Found",
+                emptyQuestDesc: "No quests match this view. Create a new quest to start earning EXP and leveling up!",
+                createFirstQuestBtn: "Create New Quest",
+                categoryNav: "Categories",
+                themeNav: "Theme",
+                questNameLabel: "Quest / Task Name",
+                quotes: [
+                    "\"The most beloved deeds to Allah are those done consistently, even if small.\"",
+                    "\"Getting 1% better every day leads to 37x growth by the end of the year!\"",
+                    "\"Discipline is the bridge between your 2027 goals and real accomplishment.\"",
+                    "\"Every small quest you conquer today shapes the strongest version of yourself.\""
+                ]
+            },
+            ar: {
+                settingsBtn: "الإعدادات والحساب",
+                settingsShortBtn: "الإعدادات",
+                settingsModalTitle: "الإعدادات والحساب",
+                languageLabel: "🌐 اللغة / Language",
+                soundTitle: "المؤثرات الصوتية",
+                soundDesc: "أصوات نقاط الخبرة والمستوى",
+                accountSectionTitle: "حالة الحساب",
+                linkAccountHint: "سجل الدخول بالبريد الإلكتروني لحفظ تقدمك عبر الأجهزة:",
+                loginBtn: "تسجيل الدخول",
+                registerBtn: "إنشاء حساب",
+                logoutBtn: "تسجيل الخروج",
+                resetZoneTitle: "منطقة إعادة الضبط",
+                resetDailyBtn: "إعادة اليومي",
+                resetAllBtn: "إعادة ضبط الكل",
+                totalExpLabel: "مجموع الخبرة",
+                questsDoneLabel: "المهام المنجزة",
+                streakDaysLabel: "أيام الاستمرار",
+                expProgressLabel: "تقدم الخبرة",
+                radarTitle: "إحصائيات قدرات الشخصية",
+                radarHint: "أكمل المهام في كل فئة لموازنة قوة شخصيتك!",
+                badgesTitle: "الإنجازات والأوسمة",
+                difficultyLabel: "مستوى الصعوبة",
+                frequencyLabel: "التكرار",
+                allCatName: "جميع الفئات",
+                completeBtn: "إكمال المهمة",
+                undoBtn: "تراجع",
+                addQuestBtn: "إضافة مهمة جديدة",
+                addQuestShort: "مهمة جديدة",
+                addCategoryShort: "إضافة فئة",
+                focusCategoriesLabel: "فئات التركيز",
+                newShortBtn: "+ جديد",
+                headerTitle: "لوحة مهام وتطوير الذات 2027",
+                headerSubtitle: "أنجز مهامك اليومية لرفع مستوى شخصيتك!",
+                dayUnit: "أيام",
+                filterActive: "نشط",
+                filterCompleted: "مكتمل",
+                filterAll: "الكل",
+                emptyQuestTitle: "لا توجد مهام",
+                emptyQuestDesc: "لا توجد مهام في هذا القسم. أضف مهمة جديدة لبدء جمع نقاط الخبرة!",
+                createFirstQuestBtn: "إنشاء مهمة جديدة",
+                categoryNav: "الفئات",
+                themeNav: "المظهر",
+                questNameLabel: "اسم المهمة",
+                quotes: [
+                    "\"أحب الأعمال إلى الله أدومها وإن قل.\"",
+                    "\"التطور بنسبة 1% يومياً يصنع فرقاً هائلاً في رحلتك لعام 2027!\"",
+                    "\"الانضباط هو الجسر بين أهدافك وتحقيقها على أرض الواقع.\"",
+                    "\"كل مهمة صغيرة تنجزها اليوم تبني النسخة الأقوى منك.\""
+                ]
+            },
+            ja: {
+                settingsBtn: "設定 & アカウント",
+                settingsShortBtn: "設定",
+                settingsModalTitle: "システム設定 & アカウント",
+                languageLabel: "🌐 言語選択 / Language",
+                soundTitle: "RPG サウンド効果",
+                soundDesc: "EXP獲得・レベルアップ音",
+                accountSectionTitle: "アカウント状態",
+                linkAccountHint: "メールでログインしてデータをクラウド保存:",
+                loginBtn: "ログイン",
+                registerBtn: "新規登録",
+                logoutBtn: "ログアウト",
+                resetZoneTitle: "リセットエリア",
+                resetDailyBtn: "デイリー初期化",
+                resetAllBtn: "全データ初期化",
+                totalExpLabel: "累計 EXP",
+                questsDoneLabel: "達成クエスト",
+                streakDaysLabel: "連続ログイン",
+                expProgressLabel: "EXP 進捗",
+                radarTitle: "キャラクター能力レーダー",
+                radarHint: "各カテゴリーのクエストを達成してステータスを強化しよう！",
+                badgesTitle: "実績 & 称号バッジ",
+                difficultyLabel: "難易度 (獲得EXP)",
+                frequencyLabel: "頻度",
+                allCatName: "すべてのカテゴリー",
+                completeBtn: "クエスト達成",
+                undoBtn: "取り消す",
+                addQuestBtn: "新規クエスト追加",
+                addQuestShort: "クエスト追加",
+                addCategoryShort: "カテゴリー追加",
+                focusCategoriesLabel: "フォーカスカテゴリー",
+                newShortBtn: "+ 新規",
+                headerTitle: "2027 自己成長クエストボード",
+                headerSubtitle: "毎日のクエストをクリアしてレベルアップしよう！",
+                dayUnit: "日",
+                filterActive: "進行中",
+                filterCompleted: "達成済",
+                filterAll: "すべて",
+                emptyQuestTitle: "クエストがありません",
+                emptyQuestDesc: "新しいクエストを追加してEXPを獲得しましょう！",
+                createFirstQuestBtn: "クエストを作成",
+                categoryNav: "カテゴリー",
+                themeNav: "テーマ",
+                questNameLabel: "クエスト名",
+                quotes: [
+                    "「小さな習慣の継続こそが、2027年の最強の自分を作る。」",
+                    "「毎日1%の成長が、1年後には37倍の進化をもたらす！」",
+                    "「規律とは、目標と達成をつなぐ架け橋である。」",
+                    "「今日クリアした小さなクエストが、未来の伝説を創る。」"
+                ]
+            }
+        };
+
+        // ==========================================
+        // 4. RPG PROGRESSION & SOUND ENGINE
+        // ==========================================
+        function getExpForNextLevel(level) {
+            return 100 + (level - 1) * 50;
+        }
+
+        function getCharacterRank(level) {
+            if (level >= 20) return { title: 'Grandmaster of 2027', emoji: '👑' };
+            if (level >= 15) return { title: 'Legendary Conqueror', emoji: '🐉' };
+            if (level >= 10) return { title: 'Elite Champion', emoji: '⚔️' };
+            if (level >= 7)  return { title: 'Dedicated Warrior', emoji: '🛡️' };
+            if (level >= 4)  return { title: 'Rising Apprentice', emoji: '🔥' };
+            if (level >= 2)  return { title: 'Focused Seeker', emoji: '🧭' };
+            return { title: 'Novice Adventurer', emoji: '🧙‍♂️' };
+        }
+
+        function playRpgSound(type) {
+            if (!soundEnabled) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const now = ctx.currentTime;
+
+                if (type === 'exp') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.setValueAtTime(880, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'levelup') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+                        gain.gain.setValueAtTime(0.12, now + idx * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.35);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.1);
+                        osc.stop(now + idx * 0.1 + 0.35);
+                    });
+                }
+            } catch (e) {
+                // Safe ignore if browser blocks audio
+            }
+        }
+
+        // ==========================================
+        // 5. NON-BLOCKING FIREBASE CLOUD SYNC
+        // ==========================================
+        async function initFirebaseBackground() {
+            try {
+                let firebaseConfig = null;
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                }
+                if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.includes('DemoKey')) {
+                    updateSyncIndicator('Mod Tempatan', false);
+                    return;
+                }
+
+                const [appMod, authMod, fsMod] = await Promise.all([
+                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"),
+                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"),
+                    import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js")
+                ]);
+
+                firestoreModules = { ...authMod, ...fsMod };
+                const app = appMod.initializeApp(firebaseConfig);
+                auth = authMod.getAuth(app);
+                db = fsMod.getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await authMod.signInWithCustomToken(auth, __initial_auth_token).catch(() => {});
+                } else if (!auth.currentUser) {
+                    await authMod.signInAnonymously(auth).catch(() => {});
+                }
+
+                authMod.onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        updateSyncIndicator('Awan Aktif', true);
+                        await syncWithFirestore(user);
+                    } else {
+                        currentUser = null;
+                        if (unsubCategories) unsubCategories();
+                        if (unsubQuests) unsubQuests();
+                        updateSyncIndicator('Mod Tempatan', false);
+                    }
+                });
+            } catch (err) {
+                console.warn('Running in offline/local mode:', err);
+                updateSyncIndicator('Mod Tempatan', false);
+            }
+        }
+
+        function updateSyncIndicator(label, isCloud) {
+            const textEl = document.getElementById('syncStatusText');
+            const pillEl = document.getElementById('syncStatusPill');
+            if (textEl) textEl.textContent = label;
+            if (pillEl && !isCloud) {
+                pillEl.className = "hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[11px] font-bold";
+            }
+        }
+
+        async function syncWithFirestore(user) {
+            if (!db || !firestoreModules) return;
+            const { doc, getDoc, setDoc, collection, onSnapshot } = firestoreModules;
+            const uid = user.uid;
+
+            try {
+                const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'stats');
+                const snap = await getDoc(profileRef);
+                if (!snap.exists()) {
+                    userProfile.name = user.displayName || (user.isAnonymous ? userProfile.name : user.email.split('@')[0]);
+                    userProfile.email = user.email || 'Akaun Tetamu (Awan)';
+                    await setDoc(profileRef, userProfile);
+                    for (const cat of categories) {
+                        await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'categories', cat.id), cat);
+                    }
+                    for (const q of quests) {
+                        await setDoc(doc(db, 'artifacts', appId, 'users', uid, 'quests', q.id), q);
+                    }
+                } else {
+                    userProfile = { ...userProfile, ...snap.data() };
+                    saveLocalCache();
+                    renderAll();
+                }
+
+                const catCol = collection(db, 'artifacts', appId, 'users', uid, 'categories');
+                unsubCategories = onSnapshot(catCol, (snapshot) => {
+                    if (!snapshot.empty) {
+                        const cloudCats = [];
+                        snapshot.forEach(d => cloudCats.push({ id: d.id, ...d.data() }));
+                        cloudCats.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+                        categories = cloudCats;
+                        saveLocalCache();
+                        renderCategoriesUI();
+                        renderQuestsUI();
+                        renderRadarAndBadges();
+                    }
+                }, () => {});
+
+                const questCol = collection(db, 'artifacts', appId, 'users', uid, 'quests');
+                unsubQuests = onSnapshot(questCol, (snapshot) => {
+                    if (!snapshot.empty) {
+                        const cloudQuests = [];
+                        snapshot.forEach(d => cloudQuests.push({ id: d.id, ...d.data() }));
+                        cloudQuests.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                        quests = cloudQuests;
+                        saveLocalCache();
+                        renderCategoriesUI();
+                        renderQuestsUI();
+                        renderRadarAndBadges();
+                    }
+                }, () => {});
+            } catch (e) {
+                console.warn('Firestore sync fallback:', e);
+            }
+        }
+
+        async function persistProfileCloud() {
+            saveLocalCache();
+            if (!db || !currentUser || !firestoreModules) return;
+            try {
+                const { doc, setDoc } = firestoreModules;
+                await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'stats'), userProfile, { merge: true });
+            } catch (e) {}
+        }
+
+        // ==========================================
+        // 6. QUEST & CATEGORY ACTIONS (INSTANT + SYNC)
+        // ==========================================
+        window.completeQuest = async (questId) => {
+            const quest = quests.find(q => q.id === questId);
+            if (!quest || quest.completed) return;
+
+            quest.completed = true;
+            quest.completedAt = Date.now();
+
+            let currentExp = (userProfile.exp || 0) + Number(quest.exp);
+            let currentLevel = userProfile.level || 1;
+            let leveledUp = false;
+
+            while (currentExp >= getExpForNextLevel(currentLevel)) {
+                currentExp -= getExpForNextLevel(currentLevel);
+                currentLevel++;
+                leveledUp = true;
+            }
+
+            userProfile.exp = currentExp;
+            userProfile.level = currentLevel;
+            userProfile.questsCompleted = (userProfile.questsCompleted || 0) + 1;
+
+            renderAll();
+            playRpgSound('exp');
+            showToast(`+${quest.exp} EXP Diperoleh!`, `Selesai: ${quest.title}`);
+
+            if (leveledUp) {
+                playRpgSound('levelup');
+                triggerLevelUpCelebration(currentLevel);
+            }
+
+            await persistProfileCloud();
+            if (db && currentUser && firestoreModules) {
+                try {
+                    const { doc, updateDoc } = firestoreModules;
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'quests', questId), {
+                        completed: true,
+                        completedAt: quest.completedAt
+                    });
+                } catch (e) {}
+            }
+        };
+
+        window.undoQuest = async (questId) => {
+            const quest = quests.find(q => q.id === questId);
+            if (!quest || !quest.completed) return;
+
+            quest.completed = false;
+            userProfile.exp = Math.max(0, (userProfile.exp || 0) - Number(quest.exp));
+            userProfile.questsCompleted = Math.max(0, (userProfile.questsCompleted || 0) - 1);
+
+            renderAll();
+            showToast("Status Dikembalikan", quest.title);
+
+            await persistProfileCloud();
+            if (db && currentUser && firestoreModules) {
+                try {
+                    const { doc, updateDoc } = firestoreModules;
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'quests', questId), { completed: false });
+                } catch (e) {}
+            }
+        };
+
+        window.deleteQuest = async (questId) => {
+            quests = quests.filter(q => q.id !== questId);
+            renderAll();
+            saveLocalCache();
+            showToast("Quest Dipadam", "Tugasan telah dikeluarkan dari senarai.");
+
+            if (db && currentUser && firestoreModules) {
+                try {
+                    const { doc, deleteDoc } = firestoreModules;
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'quests', questId));
+                } catch (e) {}
+            }
+        };
+
+        window.resetDailyQuests = async () => {
+            const dailyCompleted = quests.filter(q => q.frequency === 'daily' && q.completed);
+            if (dailyCompleted.length === 0) {
+                showToast("Tiada Quest Harian Selesai", "Semua quest harian anda sudah sedia!");
+                return;
+            }
+
+            dailyCompleted.forEach(q => { q.completed = false; });
+            userProfile.streak = (userProfile.streak || 1) + 1;
+            renderAll();
+            showToast(`Hari Baharu! Streak ${userProfile.streak} Hari 🔥`, "Semua quest harian telah ditetapkan semula.");
+
+            await persistProfileCloud();
+            if (db && currentUser && firestoreModules) {
+                try {
+                    const { doc, updateDoc } = firestoreModules;
+                    for (const q of dailyCompleted) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'quests', q.id), { completed: false });
+                    }
+                } catch (e) {}
+            }
+        };
+
+        // ==========================================
+        // 7. MODALS & FORM HANDLERS
+        // ==========================================
+        window.openQuestModal = (questId = null) => {
+            const modal = document.getElementById('questModal');
+            const titleEl = document.getElementById('questModalTitle');
+            const catSelect = document.getElementById('questCategorySelect');
+
+            catSelect.innerHTML = categories.map(c =>
+                `<option value="${c.id}">${c.emoji} ${c.name}</option>`
+            ).join('');
+
+            if (questId) {
+                const q = quests.find(item => item.id === questId);
+                if (!q) return;
+                document.getElementById('editQuestId').value = q.id;
+                document.getElementById('questTitleInput').value = q.title;
+                catSelect.value = q.categoryId;
+                document.getElementById('questDifficultySelect').value = q.exp;
+                document.getElementById('questFrequencySelect').value = q.frequency;
+                titleEl.querySelector('span:last-child').textContent = "Edit Quest";
+            } else {
+                document.getElementById('editQuestId').value = '';
+                document.getElementById('questTitleInput').value = '';
+                if (selectedCategory !== 'all') catSelect.value = selectedCategory;
+                document.getElementById('questDifficultySelect').value = '30';
+                document.getElementById('questFrequencySelect').value = 'daily';
+                titleEl.querySelector('span:last-child').textContent = I18N[currentLang].addQuestBtn;
+            }
+            modal.classList.remove('hidden');
+        };
+
+        window.closeQuestModal = () => document.getElementById('questModal').classList.add('hidden');
+
+        window.handleSaveQuest = async (e) => {
+            e.preventDefault();
+            const editId = document.getElementById('editQuestId').value;
+            const title = document.getElementById('questTitleInput').value.trim();
+            const categoryId = document.getElementById('questCategorySelect').value;
+            const exp = Number(document.getElementById('questDifficultySelect').value);
+            const frequency = document.getElementById('questFrequencySelect').value;
+
+            if (!title) return;
+
+            if (editId) {
+                const idx = quests.findIndex(q => q.id === editId);
+                if (idx !== -1) {
+                    quests[idx] = { ...quests[idx], title, categoryId, exp, frequency };
+                }
+                showToast("Quest Dikemaskini", title);
+            } else {
+                const newQuest = {
+                    id: 'q_' + Date.now(),
+                    title,
+                    categoryId,
+                    exp,
+                    frequency,
+                    completed: false,
+                    createdAt: Date.now()
+                };
+                quests.unshift(newQuest);
+                showToast("Quest Baharu Dicipta!", `${title} (+${exp} EXP)`);
+            }
+
+            renderAll();
+            saveLocalCache();
+            closeQuestModal();
+
+            if (db && currentUser && firestoreModules) {
+                try {
+                    const { doc, setDoc } = firestoreModules;
+                    const target = editId ? quests.find(q => q.id === editId) : quests[0];
+                    if (target) {
+                        await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'quests', target.id), target, { merge: true });
+                    }
+                } catch (err) {}
+            }
+        };
+
+        window.openCategoryModal = () => {
+            document.getElementById('categoryNameInput').value = '';
+            document.getElementById('selectedCategoryEmoji').value = '🚀';
+            document.getElementById('selectedCategoryColor').value = 'emerald';
+            renderCategoryPickerOptions();
+            document.getElementById('categoryModal').classList.remove('hidden');
+        };
+
+        window.closeCategoryModal = () => document.getElementById('categoryModal').classList.add('hidden');
+
+        function renderCategoryPickerOptions() {
+            const currentEmoji = document.getElementById('selectedCategoryEmoji').value;
+            const currentColor = document.getElementById('selectedCategoryColor').value;
+
+            document.getElementById('emojiPickerGrid').innerHTML = EMOJI_CHOICES.map(em => `
+                <button type="button" onclick="selectEmoji('${em}')" class="h-10 rounded-xl text-lg flex items-center justify-center border transition-all ${currentEmoji === em ? 'border-indigo-500 bg-indigo-500/15 scale-105' : 'border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}">
+                    ${em}
+                </button>
+            `).join('');
+
+            document.getElementById('colorPickerGrid').innerHTML = COLOR_CHOICES.map(col => `
+                <button type="button" onclick="selectColor('${col.name}')" class="w-8 h-8 rounded-full ${col.bg} flex items-center justify-center text-white text-xs transition-transform ${currentColor === col.name ? 'ring-2 ring-offset-2 ring-indigo-500 dark:ring-offset-rpg-card scale-110' : 'opacity-75 hover:opacity-100'}">
+                    ${currentColor === col.name ? '<i class="fa-solid fa-check"></i>' : ''}
+                </button>
+            `).join('');
+        }
+
+        window.selectEmoji = (em) => {
+            document.getElementById('selectedCategoryEmoji').value = em;
+            renderCategoryPickerOptions();
+        };
+
+        window.selectColor = (col) => {
+            document.getElementById('selectedCategoryColor').value = col;
+            renderCategoryPickerOptions();
+        };
+
+        window.handleSaveCategory = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('categoryNameInput').value.trim();
+            const emoji = document.getElementById('selectedCategoryEmoji').value;
+            const color = document.getElementById('selectedCategoryColor').value;
+            if (!name) return;
+
+            const newCat = {
+                id: 'cat_custom_' + Date.now(),
+                name,
+                emoji,
+                color,
+                isDefault: false
+            };
+
+            categories.push(newCat);
+            saveLocalCache();
+            closeCategoryModal();
+            selectCategory(newCat.id);
+            renderRadarAndBadges();
+            showToast("Kategori Baharu Ditambah!", `${emoji} ${name}`);
+
+            if (db && currentUser && firestoreModules) {
+                try {
+                    const { doc, setDoc } = firestoreModules;
+                    await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'categories', newCat.id), newCat);
+                } catch (err) {}
+            }
+        };
+
+        window.deleteCategory = async (catId, e) => {
+            e.stopPropagation();
+            categories = categories.filter(c => c.id !== catId);
+            if (selectedCategory === catId) selectedCategory = 'all';
+            renderAll();
+            saveLocalCache();
+            showToast("Kategori Dipadam", "Kategori tersuai telah dipadam.");
+
+            if (db && currentUser && firestoreModules) {
+                try {
+                    const { doc, deleteDoc } = firestoreModules;
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'categories', catId));
+                } catch (err) {}
+            }
+        };
+
+        // ==========================================
+        // 8. SETTINGS MODAL, LANGUAGE & AUTH
+        // ==========================================
+        window.openSettingsModal = () => {
+            resetConfirmArmed = false;
+            const resetBtn = document.getElementById('fullResetBtn');
+            if (resetBtn) {
+                resetBtn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>${I18N[currentLang].resetAllBtn}</span>`;
+                resetBtn.className = "py-2.5 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all";
+            }
+
+            const badge = document.getElementById('settingsAccountBadge');
+            const emailEl = document.getElementById('settingsAccountEmail');
+            const quickForm = document.getElementById('settingsQuickLoginForm');
+
+            if (currentUser && !currentUser.isAnonymous && currentUser.email) {
+                badge.textContent = "Akaun Berdaftar";
+                badge.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-500";
+                emailEl.textContent = currentUser.email;
+                quickForm.classList.add('hidden');
+            } else {
+                badge.textContent = "Mod Pantas / Tetamu";
+                badge.className = "px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-500";
+                emailEl.textContent = userProfile.email || "Data disimpan di pelayar & awan";
+                quickForm.classList.remove('hidden');
+            }
+
+            updateLanguageButtonsUI();
+            updateSoundButtonUI();
+            document.getElementById('settingsModal').classList.remove('hidden');
+        };
+
+        window.closeSettingsModal = () => document.getElementById('settingsModal').classList.add('hidden');
+
+        window.changeLanguage = (lang) => {
+            currentLang = lang;
+            const dict = I18N[lang] || I18N.ms;
+            document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.textContent = dict[key];
+            });
+
+            document.getElementById('dailyQuoteText').textContent = dict.quotes[quoteIndex % dict.quotes.length];
+            updateLanguageButtonsUI();
+            saveLocalCache();
+            renderAll();
+        };
+
+        function updateLanguageButtonsUI() {
+            ['ms', 'en', 'ar', 'ja'].forEach(code => {
+                const btn = document.getElementById(`langBtn_${code}`);
+                if (!btn) return;
+                if (code === currentLang) {
+                    btn.className = "lang-btn py-2.5 px-3 rounded-xl border border-indigo-500 bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 text-xs font-bold flex items-center justify-center gap-2 transition-all";
+                } else {
+                    btn.className = "lang-btn py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center justify-center gap-2 transition-all";
+                }
+            });
+        }
+
+        function updateSoundButtonUI() {
+            const btn = document.getElementById('soundToggleBtn');
+            if (!btn) return;
+            if (soundEnabled) {
+                btn.textContent = "ON";
+                btn.className = "px-3.5 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs transition-all";
+            } else {
+                btn.textContent = "OFF";
+                btn.className = "px-3.5 py-1.5 rounded-xl bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-extrabold text-xs transition-all";
+            }
+        }
+
+        window.toggleSoundEffects = () => {
+            soundEnabled = !soundEnabled;
+            updateSoundButtonUI();
+            saveLocalCache();
+            if (soundEnabled) playRpgSound('exp');
+        };
+
+        window.nextQuote = () => {
+            quoteIndex++;
+            const dict = I18N[currentLang] || I18N.ms;
+            document.getElementById('dailyQuoteText').textContent = dict.quotes[quoteIndex % dict.quotes.length];
+        };
+
+        window.confirmFullReset = async () => {
+            const btn = document.getElementById('fullResetBtn');
+            if (!resetConfirmArmed) {
+                resetConfirmArmed = true;
+                btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Klik Sekali Lagi!</span>`;
+                btn.className = "py-2.5 px-3 rounded-xl bg-rose-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 animate-pulse";
+                return;
+            }
+
+            userProfile.exp = 0;
+            userProfile.level = 1;
+            userProfile.streak = 1;
+            userProfile.questsCompleted = 0;
+            quests.forEach(q => { q.completed = false; });
+
+            renderAll();
+            closeSettingsModal();
+            showToast("Reset Selesai", "Semua EXP & Level telah kembali ke Level 1.");
+
+            await persistProfileCloud();
+            if (db && currentUser && firestoreModules) {
+                try {
+                    const { doc, updateDoc } = firestoreModules;
+                    for (const q of quests) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'quests', q.id), { completed: false });
+                    }
+                } catch (e) {}
+            }
+        };
+
+        // Auth UI switching
+        window.switchAuthTab = (mode) => {
+            authMode = mode;
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            const nameField = document.getElementById('nameFieldContainer');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            document.getElementById('authErrorBox').classList.add('hidden');
+
+            if (mode === 'login') {
+                tabLogin.className = "py-2 text-sm font-semibold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all";
+                tabRegister.className = "py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all";
+                nameField.classList.add('hidden');
+                submitBtn.textContent = "Log Masuk ke Dunia 2027";
+            } else {
+                tabRegister.className = "py-2 text-sm font-semibold rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all";
+                tabLogin.className = "py-2 text-sm font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all";
+                nameField.classList.remove('hidden');
+                submitBtn.textContent = "Daftar Karakter Baharu";
+            }
+        };
+
+        window.handleEmailAuth = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const name = document.getElementById('authName').value.trim();
+
+            if (auth && firestoreModules) {
+                try {
+                    if (authMode === 'register') {
+                        const cred = await firestoreModules.createUserWithEmailAndPassword(auth, email, password);
+                        if (name) await firestoreModules.updateProfile(cred.user, { displayName: name });
+                    } else {
+                        await firestoreModules.signInWithEmailAndPassword(auth, email, password);
+                    }
+                } catch (err) {
+                    // Fallback to local profile login if Firebase Auth is not configured
+                    userProfile.email = email;
+                    if (name) userProfile.name = name;
+                    saveLocalCache();
+                }
+            } else {
+                userProfile.email = email;
+                if (name) userProfile.name = name;
+                else userProfile.name = email.split('@')[0];
+                saveLocalCache();
+            }
+
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            renderAll();
+            showToast("Selamat Kembali!", userProfile.name);
+        };
+
+        window.handleSettingsLogin = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('settingsEmailInput').value.trim();
+            const pass = document.getElementById('settingsPassInput').value;
+
+            if (auth && firestoreModules) {
+                try {
+                    if (window.settingsAuthAction === 'register') {
+                        await firestoreModules.createUserWithEmailAndPassword(auth, email, pass);
+                    } else {
+                        await firestoreModules.signInWithEmailAndPassword(auth, email, pass);
+                    }
+                } catch (err) {
+                    userProfile.email = email;
+                    userProfile.name = email.split('@')[0];
+                    saveLocalCache();
+                }
+            } else {
+                userProfile.email = email;
+                userProfile.name = email.split('@')[0];
+                saveLocalCache();
+            }
+
+            renderAll();
+            closeSettingsModal();
+            showToast("Akaun Dikemaskini!", email);
+        };
+
+        window.handleGuestLogin = () => {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            renderAll();
+            showToast("Mod Pantas Aktif", "Selamat datang ke LEVEL UP 2027!");
+        };
+
+        window.handleLogoutFromSettings = async () => {
+            closeSettingsModal();
+            if (auth && firestoreModules) {
+                try { await firestoreModules.signOut(auth); } catch (e) {}
+            }
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+        };
+
+        // ==========================================
+        // 9. UI RENDERING FUNCTIONS
+        // ==========================================
+        function renderAll() {
+            renderProfileUI();
+            renderRadarAndBadges();
+            renderCategoriesUI();
+            renderQuestsUI();
+        }
+
+        function renderProfileUI() {
+            const level = userProfile.level || 1;
+            const exp = userProfile.exp || 0;
+            const nextExp = getExpForNextLevel(level);
+            const pct = Math.min(100, Math.round((exp / nextExp) * 100));
+            const rank = getCharacterRank(level);
+
+            document.getElementById('profileUserName').textContent = userProfile.name || 'Pengembara 2027';
+            document.getElementById('profileUserEmail').textContent = userProfile.email || 'Mod Pantas';
+            document.getElementById('profileLevelBadge').textContent = level;
+            document.getElementById('profileTitleBadge').textContent = rank.title;
+            document.getElementById('characterAvatarEmoji').textContent = rank.emoji;
+
+            document.getElementById('currentLevelExp').textContent = exp;
+            document.getElementById('nextLevelExp').textContent = nextExp;
+            document.getElementById('expProgressBar').style.width = `${pct}%`;
+
+            let totalCumulativeExp = exp;
+            for (let l = 1; l < level; l++) totalCumulativeExp += getExpForNextLevel(l);
+
+            document.getElementById('statTotalExp').textContent = totalCumulativeExp;
+            document.getElementById('statQuestsDone').textContent = userProfile.questsCompleted || 0;
+            document.getElementById('statStreakDays').textContent = userProfile.streak || 1;
+            document.getElementById('headerStreakCount').textContent = userProfile.streak || 1;
+        }
+
+        function renderRadarAndBadges() {
+            const svg = document.getElementById('rpgRadarSvg');
+            if (svg) {
+                const coreCats = [
+                    { id: 'cat_chardev', label: 'Char' },
+                    { id: 'cat_softskill', label: 'Skill' },
+                    { id: 'cat_spiritual', label: 'Spirit' },
+                    { id: 'cat_physical', label: 'Physic' },
+                    { id: 'cat_knowledge', label: 'Intel' }
+                ];
+
+                const cx = 120, cy = 120, maxR = 78;
+                const angles = coreCats.map((_, i) => (Math.PI * 2 * i) / 5 - Math.PI / 2);
+
+                const scores = coreCats.map(c => {
+                    const catQuests = quests.filter(q => q.categoryId === c.id);
+                    if (catQuests.length === 0) return 0.3;
+                    const doneCount = catQuests.filter(q => q.completed).length;
+                    return Math.min(1, 0.25 + (doneCount / catQuests.length) * 0.75);
+                });
+
+                let gridHtml = '';
+                [0.33, 0.66, 1].forEach(scale => {
+                    const pts = angles.map(a => `${cx + Math.cos(a) * maxR * scale},${cy + Math.sin(a) * maxR * scale}`).join(' ');
+                    gridHtml += `<polygon points="${pts}" fill="none" stroke="rgba(148,163,184,0.25)" stroke-width="1"/>`;
+                });
+
+                let axisHtml = '';
+                angles.forEach((a, i) => {
+                    const x2 = cx + Math.cos(a) * maxR;
+                    const y2 = cy + Math.sin(a) * maxR;
+                    const lx = cx + Math.cos(a) * (maxR + 20);
+                    const ly = cy + Math.sin(a) * (maxR + 20);
+                    axisHtml += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="rgba(148,163,184,0.2)" stroke-width="1"/>`;
+                    axisHtml += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" fill="#94a3b8" font-size="10" font-weight="700">${coreCats[i].label}</text>`;
+                });
+
+                const statPts = angles.map((a, i) => `${cx + Math.cos(a) * maxR * scores[i]},${cy + Math.sin(a) * maxR * scores[i]}`).join(' ');
+                const statDots = angles.map((a, i) => {
+                    const px = cx + Math.cos(a) * maxR * scores[i];
+                    const py = cy + Math.sin(a) * maxR * scores[i];
+                    return `<circle cx="${px}" cy="${py}" r="3.5" fill="#10b981"/>`;
+                }).join('');
+
+                svg.innerHTML = `${gridHtml}${axisHtml}<polygon points="${statPts}" fill="rgba(16, 185, 129, 0.28)" stroke="#10b981" stroke-width="2"/>${statDots}`;
+            }
+
+            const badgesGrid = document.getElementById('badgesGrid');
+            const counterEl = document.getElementById('badgeProgressCounter');
+            if (!badgesGrid) return;
+
+            const hasSpiritualDone = quests.some(q => q.categoryId === 'cat_spiritual' && q.completed);
+            const hasPhysicalDone = quests.some(q => q.categoryId === 'cat_physical' && q.completed);
+            const hasCustomCat = categories.some(c => !c.isDefault);
+
+            const badgeList = [
+                { icon: '🌱', name: 'Langkah Pertama', desc: 'Selesai 1 Quest', unlocked: (userProfile.questsCompleted || 0) >= 1 },
+                { icon: '🕌', name: 'Cahaya Rohani', desc: 'Quest Spiritual', unlocked: hasSpiritualDone },
+                { icon: '💪', name: 'Atlet 2027', desc: 'Quest Fizikal', unlocked: hasPhysicalDone },
+                { icon: '🔥', name: 'Istiqamah', desc: 'Streak 3 Hari', unlocked: (userProfile.streak || 1) >= 3 },
+                { icon: '🧭', name: 'Perancang Bijak', desc: 'Kategori Baru', unlocked: hasCustomCat },
+                { icon: '⚔️', name: 'Pahlawan Lv.3', desc: 'Capai Level 3', unlocked: (userProfile.level || 1) >= 3 }
+            ];
+
+            const unlockedCount = badgeList.filter(b => b.unlocked).length;
+            counterEl.textContent = `${unlockedCount} / ${badgeList.length} Dibuka`;
+
+            badgesGrid.innerHTML = badgeList.map(b => `
+                <div class="p-2.5 rounded-2xl border transition-all flex items-center gap-2.5 ${b.unlocked ? 'bg-gradient-to-br from-emerald-500/10 to-indigo-500/10 border-emerald-500/30 shadow-sm' : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60 opacity-50 grayscale'}">
+                    <div class="w-9 h-9 rounded-xl ${b.unlocked ? 'bg-emerald-500/20' : 'bg-slate-200 dark:bg-slate-800'} flex items-center justify-center text-lg shrink-0">
+                        ${b.icon}
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-bold text-[11px] text-slate-800 dark:text-white truncate">${b.name}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${b.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.selectCategory = (catId) => {
+            selectedCategory = catId;
+            renderCategoriesUI();
+            renderQuestsUI();
+        };
+
+        window.setStatusFilter = (status) => {
+            statusFilter = status;
+            const activeClass = "px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all";
+            const inactiveClass = "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all";
+
+            document.getElementById('filterActiveBtn').className = status === 'active' ? activeClass : inactiveClass;
+            document.getElementById('filterCompletedBtn').className = status === 'completed' ? activeClass : inactiveClass;
+            document.getElementById('filterAllBtn').className = status === 'all' ? activeClass : inactiveClass;
+            renderQuestsUI();
+        };
+
+        function renderCategoriesUI() {
+            const desktopList = document.getElementById('desktopCategoryList');
+            const mobileList = document.getElementById('mobileCategoryList');
+            const dict = I18N[currentLang] || I18N.ms;
+            const totalActiveCount = quests.filter(q => !q.completed).length;
+
+            let desktopHtml = `
+                <button onclick="selectCategory('all')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${selectedCategory === 'all' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70'}">
+                    <span class="flex items-center gap-2.5">
+                        <span class="text-base">🌌</span>
+                        <span>${dict.allCatName}</span>
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-200/80 dark:bg-slate-800 font-bold">${totalActiveCount}</span>
+                </button>
+            `;
+
+            let mobileHtml = `
+                <button onclick="selectCategory('all')" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all ${selectedCategory === 'all' ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-sm' : 'bg-white dark:bg-rpg-card text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800'}">
+                    <span>🌌</span>
+                    <span>${dict.filterAll} (${totalActiveCount})</span>
+                </button>
+            `;
+
+            categories.forEach(cat => {
+                const count = quests.filter(q => q.categoryId === cat.id && !q.completed).length;
+                const isSelected = selectedCategory === cat.id;
+
+                desktopHtml += `
+                    <div class="group relative flex items-center">
+                        <button onclick="selectCategory('${cat.id}')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${isSelected ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70'}">
+                            <span class="flex items-center gap-2.5 truncate pr-2">
+                                <span class="text-base">${cat.emoji}</span>
+                                <span class="truncate">${cat.name}</span>
+                            </span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-200/80 dark:bg-slate-800 font-bold shrink-0">${count}</span>
+                        </button>
+                        ${!cat.isDefault ? `
+                            <button onclick="deleteCategory('${cat.id}', event)" class="hidden group-hover:flex absolute right-8 w-6 h-6 rounded-lg bg-rose-500/20 text-rose-500 items-center justify-center text-[10px] hover:bg-rose-500 hover:text-white transition-colors" title="Padam Kategori">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+
+                mobileHtml += `
+                    <button onclick="selectCategory('${cat.id}')" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all ${isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white dark:bg-rpg-card text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800'}">
+                        <span>${cat.emoji}</span>
+                        <span>${cat.name}</span>
+                        <span class="opacity-75">(${count})</span>
+                    </button>
+                `;
+            });
+
+            desktopList.innerHTML = desktopHtml;
+            mobileList.innerHTML = mobileHtml;
+        }
+
+        function renderQuestsUI() {
+            const container = document.getElementById('questsContainer');
+            const emptyState = document.getElementById('emptyQuestsState');
+            const titleEl = document.getElementById('activeCategoryTitle');
+            const subEl = document.getElementById('activeCategorySubtitle');
+            const dict = I18N[currentLang] || I18N.ms;
+
+            if (selectedCategory === 'all') {
+                titleEl.innerHTML = `<span>🌌 ${dict.allCatName}</span>`;
+                subEl.textContent = dict.headerSubtitle;
+            } else {
+                const cat = categories.find(c => c.id === selectedCategory);
+                if (cat) {
+                    titleEl.innerHTML = `<span>${cat.emoji} ${cat.name}</span>`;
+                    subEl.textContent = `${cat.name}`;
+                }
+            }
+
+            const categoryFiltered = selectedCategory === 'all'
+                ? quests
+                : quests.filter(q => q.categoryId === selectedCategory);
+
+            document.getElementById('countActive').textContent = categoryFiltered.filter(q => !q.completed).length;
+            document.getElementById('countCompleted').textContent = categoryFiltered.filter(q => q.completed).length;
+
+            const finalQuests = categoryFiltered.filter(q => {
+                if (statusFilter === 'active') return !q.completed;
+                if (statusFilter === 'completed') return q.completed;
+                return true;
+            });
+
+            if (finalQuests.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            container.innerHTML = finalQuests.map(q => {
+                const cat = categories.find(c => c.id === q.categoryId) || { name: 'Umum', emoji: '✨', color: 'emerald' };
+                const colorObj = COLOR_CHOICES.find(c => c.name === cat.color) || COLOR_CHOICES[0];
+
+                return `
+                    <div class="group relative bg-white dark:bg-rpg-card border ${q.completed ? 'border-emerald-500/30 opacity-80' : 'border-slate-200 dark:border-rpg-border hover:border-indigo-500/50'} rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-2.5">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${colorObj.badge}">
+                                    <span>${cat.emoji}</span>
+                                    <span class="truncate max-w-[160px]">${cat.name}</span>
+                                </span>
+
+                                <div class="flex items-center gap-1.5">
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                        ${q.frequency === 'daily' ? '<i class="fa-solid fa-repeat mr-1 text-indigo-400"></i>Daily' : '<i class="fa-solid fa-star mr-1 text-amber-400"></i>1x'}
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                                        +${q.exp} EXP
+                                    </span>
+                                </div>
+                            </div>
+
+                            <h4 class="font-display font-bold text-base ${q.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-white'}">
+                                ${q.title}
+                            </h4>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                            <div class="flex items-center gap-1">
+                                <button onclick="openQuestModal('${q.id}')" class="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs transition-colors" title="Edit Quest">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deleteQuest('${q.id}')" class="p-2 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs transition-colors" title="Padam Quest">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+
+                            ${q.completed ? `
+                                <button onclick="undoQuest('${q.id}')" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    <span>${dict.undoBtn}</span>
+                                </button>
+                            ` : `
+                                <button onclick="completeQuest('${q.id}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-extrabold text-xs shadow-md shadow-emerald-500/20 flex items-center gap-1.5 transition-all transform active:scale-95">
+                                    <i class="fa-solid fa-check"></i>
+                                    <span>${dict.completeBtn}</span>
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // 10. CELEBRATIONS, TOASTS & THEME
+        // ==========================================
+        function triggerLevelUpCelebration(newLevel) {
+            const rank = getCharacterRank(newLevel);
+            document.getElementById('modalNewLevel').textContent = newLevel;
+            document.getElementById('modalNewTitle').textContent = rank.title;
+            document.getElementById('levelUpModal').classList.remove('hidden');
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+        }
+
+        window.closeLevelUpModal = () => document.getElementById('levelUpModal').classList.add('hidden');
+
+        let toastTimeout = null;
+        function showToast(title, message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+
+        window.toggleTheme = () => {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon';
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-sun';
+            }
+        };
+
+        // ==========================================
+        // 11. INSTANT BOOT SEQUENCE (< 300ms)
+        // ==========================================
+        loadLocalCache();
+        changeLanguage(currentLang);
+        renderAll();
+
+        // Guarantee loading screen clears in max 250ms regardless of network/Firebase
+        setTimeout(dismissLoadingScreen, 250);
+
+        // Start background Firebase cloud sync non-blockingly
+        initFirebaseBackground();
+    </script>
+</body>
+</html>
